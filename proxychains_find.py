@@ -1,3 +1,16 @@
+# usage proxychains_find.py -c <chain type> 
+# options: 
+# --find : find proxies
+#   -t / --types json list of some combination of { HTTP, HTTPS, SOCKS4, SOCKS5 }
+#   -l / --limit limit for find command
+#   -r / --response-time cap on response time
+# --tor use tor
+# -c / --chain-type <chain type>, either dynamic, strict or random
+#   --len chain-len if random chain is specified
+# -p --proxy-dns <bool> whether or not to proxy dns, true by default
+# -q --quiet-mode <bool> whether or not to use quiet mode, false by default 
+
+import sys
 from find_proxies import ProxyFinder
 
 RANDOM_CHAIN = 0
@@ -107,7 +120,20 @@ def write_to_conf(chain_type, chain_len = 0, quiet_mode = False, proxy_dns = Tru
         print("file: ", file);
         print(file.write(conf_string));
 
-    
+def get_params():
+    find = False;
+    types = [];
+    limit = 0;
+    resp_cap = 0;
+    use_tor = False;
+    chain_type = DYNAMIC_CHAIN;
+    chain_len = 0;
+    proxy_dns = True;
+    quiet_mode = False;
+
+    for arg in sys.argv:
+        pass;
+        
     
     
 
