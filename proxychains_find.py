@@ -127,12 +127,19 @@ def get_params():
     resp_cap = 0;
     use_tor = False;
     chain_type = DYNAMIC_CHAIN;
-    chain_len = 0;
+    chain_len = 1;
     proxy_dns = True;
     quiet_mode = False;
 
     for arg in sys.argv:
-        pass;
+        if("--chain-len=" in arg):
+            chain_len = int(arg.lstrip("--chain-len="))
+            
+    return ({
+        "chain_len": chain_len
+    })
+
+            
         
     
     
@@ -145,6 +152,8 @@ if __name__ == "__main__":
     proxy_list = pfinder.get_proxies();
 
     proxy_string_list = [];
+    
+    params_dict = get_params()
 
     for proxy in proxy_list: 
         if not proxy.is_working: 
@@ -153,5 +162,5 @@ if __name__ == "__main__":
         proxy_string = "socks5 " + proxy.host + " " + str(proxy.port);
         proxy_string_list.append(proxy_string);       
 
-    write_to_conf(DYNAMIC_CHAIN, proxy_list=proxy_string_list);
+    write_to_conf(DYNAMIC_CHAIN, chain_len=params_dict["chain_len"], proxy_list=proxy_string_list);
     
