@@ -11,13 +11,14 @@
 # -q --quiet-mode <bool> whether or not to use quiet mode, false by default 
 
 import sys
+import platform
 from find_proxies import ProxyFinder
 
 RANDOM_CHAIN = 0
 DYNAMIC_CHAIN = 1
 STRICT_CHAIN = 2
 
-def write_to_conf(chain_type, chain_len = 0, quiet_mode = False, proxy_dns = True, use_tor = False, proxy_list = []):
+def write_to_conf(chain_type, chain_len = 0, quiet_mode = False, proxy_dns = False, use_tor = False, proxy_list = []):
     dyn_chain_line = "#dynamic_chain";
     strict_chain_line = "#strict_chain";
     random_chain_line = "#random_chain";
@@ -29,7 +30,7 @@ def write_to_conf(chain_type, chain_len = 0, quiet_mode = False, proxy_dns = Tru
 
     if(chain_type == RANDOM_CHAIN):
         random_chain_line = "random_chain";
-        chain_len_line = "chain_len = " + chain_len;
+        chain_len_line = "chain_len = " + str(chain_len);
     elif (chain_type == STRICT_CHAIN):
         strict_chain_line = "strict_chain";
     elif (chain_type == DYNAMIC_CHAIN):
@@ -45,7 +46,7 @@ def write_to_conf(chain_type, chain_len = 0, quiet_mode = False, proxy_dns = Tru
         use_tor_line = "socks4 127.0.0.1 9050 ";
 
     for proxy in proxy_list:
-        proxy_list_line += proxy + "\n";
+        proxy_list_line += proxy + " \n";
 
     
     conf_string = "# proxychains.conf  VER 3.1 " + "\n" + \
@@ -57,7 +58,7 @@ def write_to_conf(chain_type, chain_len = 0, quiet_mode = False, proxy_dns = Tru
     "# only one option should be uncommented at time, " + "\n" + \
     "# otherwise the last appearing option will be accepted " + "\n" + \
     "# " + "\n" + \
-    dyn_chain_line + "\n" + \
+    dyn_chain_line + " \n" + \
     "# " + "\n" + \
     "# Dynamic - Each connection will be done via chained proxies " + "\n" + \
     "# all proxies chained in the order as they appear in the list " + "\n" + \
@@ -110,13 +111,18 @@ def write_to_conf(chain_type, chain_len = 0, quiet_mode = False, proxy_dns = Tru
     "[ProxyList] " + "\n" + \
     "# add proxy here ... " + "\n" + \
     "# meanwile " + "\n" + \
-    proxy_list_line + "\n" + \
+    proxy_list_line + " \n" + \
     "# defaults set to \"tor\" " + "\n" + \
-    use_tor_line;
+    use_tor_line + "\n\n";
 
     print(conf_string);
+    
+    conf_file = "/etc/proxychains.conf"
+    if platform.system() == "Darwin":
+        conf_file = "/opt/homebrew/etc/proxychains.conf"
 
-    with open("/etc/proxychains.conf", "w") as file:
+
+    with open(conf_file, "w") as file:
         print("file: ", file);
         print(file.write(conf_string));
 
@@ -134,9 +140,18 @@ def get_params():
     for arg in sys.argv:
         if("--chain-len=" in arg):
             chain_len = int(arg.lstrip("--chain-len="))
+        if("--chain-type=" in arg):
+            chain_type_str = arg.lstrip("--chain-type=")
+            if chain_type_str == "DYNAMIC":
+                chain_type = DYNAMIC_CHAIN
+            elif chain_type_str == "RANDOM":
+                chain_type = RANDOM_CHAIN
+            else:
+                print("invalid chain type: defaults to dynamic")
             
     return ({
-        "chain_len": chain_len
+        "chain_len": chain_len,
+        "chain_type": chain_type
     })
 
             
@@ -159,8 +174,8 @@ if __name__ == "__main__":
         if not proxy.is_working: 
             continue;
 
-        proxy_string = "socks5 " + proxy.host + " " + str(proxy.port);
+        proxy_string = "socks5" + "\t" + proxy.host + "\t" + str(proxy.port);
         proxy_string_list.append(proxy_string);       
 
-    write_to_conf(DYNAMIC_CHAIN, chain_len=params_dict["chain_len"], proxy_list=proxy_string_list);
+    write_to_conf(int(params_dict["chain_type"]), chain_len=int(params_dict["chain_len"]), proxy_list=proxy_string_list);
     
